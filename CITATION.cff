@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+title: "ask-axonos: an answer, and where it came from"
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+  - family-names: "Yermakou"
+    given-names: "Denis"
+    email: "connect@axonos.org"
+    website: "https://axonos.org"
+  - name: "The AxonOS Project"
+    website: "https://axonos.org"
+repository-code: "https://github.com/AxonOS-org/ask-axonos"
+url: "https://axonos.org"
+abstract: >-
+  A question widget for The AxonOS Project. Every answer carries its source: a
+  claim with the level at which it is evidenced, a quotation with the lines it
+  came from, or a refusal with the reason.
+version: 0.1.0
+date-released: "2026-08-11"
+license: "Apache-2.0 OR MIT"
+keywords:
+  - brain-computer-interface
+  - provenance
+  - ai-disclosure

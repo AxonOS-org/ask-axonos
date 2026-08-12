@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<!--
+  ask-axonos — the widget.
+
+  A visitor arrives at a page making unusual claims: a timing budget that
+  refuses configurations, an information bound on what an application may
+  learn, forty-three machine-checked proofs. The reasonable response is
+  scepticism, and until now the only way to act on it was to read a great deal.
+
+  This is the shorter path. It answers, and it shows where every answer came
+  from — a claim from the registry arrives with the level at which it is
+  evidenced; prose arrives as a quotation with a line range. Nothing is
+  paraphrased into a claim, and a question outside both is answered "I do not
+  know" rather than filled in.
+
+  Two things are deliberate and should survive any redesign.
+
+  It says it is an AI in its first line, before being asked. This project
+  builds a control layer for trusted AI agents; one that concealed what it is
+  would refute the product by existing.
+
+  And the button does not say "chat". It says the visitor may ask anything and
+  will be shown the evidence, because that is the offer, and "chat" describes a
+  mechanism rather than an offer.
+
+  Standalone by design: no framework, no build step, no third-party script. It
+  can be dropped into a static page as-is.
+
+  SPDX-License-Identifier: Apache-2.0 OR MIT
+  SPDX-FileCopyrightText: 2026 Denis Yermakou <connect@axonos.org>
+-->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ask-axonos — widget preview</title>
+
+<style>
+  :root {
+    --bg: #090c11;
+    --panel: #0e141d;
+    --line: #1b2431;
+    --ink: #eef3f9;
+    --dim: #9aa6b6;
+    --faint: #6b7789;
+    --cyan: #2dd4ff;
+    --violet: #a78bfa;
+    --green: #34d399;
+    --amber: #fbbf24;
+    --rose: #fb7185;
+  }
+
+  * { box-sizing: border-box }
+
+  @media (prefers-reduced-motion: reduce) {
+    /* Someone who has asked their system for less motion has usually asked for
+       a reason, and a lift on hover is decoration. */
+    * { transition: none !important; animation: none !important }
+    .ask:hover { transform: none }
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.6 ui-sans-serif, -apple-system, "Segoe UI", system-ui, sans-serif;
+    display: grid;
+    place-items: center;
+    padding: 32px 16px;
+  }
+
+  /* ── The button ─────────────────────────────────────────────────────
+     Deliberately not a floating bubble in a corner. A bubble is the
+     universal signal for "support chat", and a visitor who reads it that
+     way will not ask the question this exists to answer. It sits in the
+     page, states the offer in full, and is large enough to be read before
+     it is clicked. */
+  .ask {
+    display: block;
+    width: min(560px, 100%);
+    text-align: left;
+    padding: 22px 26px;
+    background:
+      radial-gradient(120% 140% at 0% 0%, #101a26 0%, var(--panel) 55%);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    color: var(--ink);
+    cursor: pointer;
+    font: inherit;
+    position: relative;
+    overflow: hidden;
+    transition: border-color .18s ease, transform .18s ease;
+  }
+  .ask::after {
+    /* A hairline of the project's cyan along the top edge: enough to read as
+       considered, not enough to read as decorated. */
+    content: "";
+    position: absolute; inset: 0 0 auto 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan) 30%, var(--violet) 70%, transparent);
+    opacity: .55;
+  }
+  .ask:hover { border-color: #2b3a4d; transform: translateY(-1px) }
+  .ask:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px }
+
+  .ask .t {
+    margin: 0 0 6px;
+    font-size: 19px;
+    font-weight: 620;
+    letter-spacing: -.01em;
+  }
+  /* A span, not a heading. A heading inside a button is announced as a
+     heading by a screen reader navigating headings, which lands the user
+     inside a control they cannot read out of. The visual weight is the same. */
+  .ask .t { display: block }
+  .ask p { margin: 0; color: var(--dim); font-size: 14px }
+  .ask .meta {
+    margin-top: 16px; padding-top: 14px;
+    border-top: 1px solid var(--line);
+    display: flex; gap: 8px 18px; flex-wrap: wrap;
+    color: var(--faint); font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+  @media (max-width: 420px) {
+    /* At 320px three claims on one line wrap into an unreadable stack. One per
+       line is longer and legible, and legible wins on the surface where most
+       of these will be read. */
+    .ask .meta { flex-direction: column; gap: 6px }
+    .ask .t { font-size: 20px }
+    .ask { padding: 20px }
+  }
+  .ask .meta span { display: inline-flex; align-items: center; gap: 6px }
+  .dot { width: 6px; height: 6px; border-radius: 50% }
+  .dot.g { background: var(--green) } .dot.c { background: var(--cyan) }
+  .dot.a { background: var(--amber) }
+
+  /* ── The panel ───────────────────────────────────────────────────── */
+  .panel {
+    display: none;
+    width: min(720px, 100%);
+    margin-top: 18px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .panel[data-open] { display: block }
+
+  .head {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .head b { font-size: 14px; font-weight: 600 }
+  .head .x {
+    background: none; border: 0; color: var(--faint);
+    font-size: 20px; line-height: 1; cursor: pointer; padding: 4px 8px;
+  }
+  .head .x:hover { color: var(--ink) }
+
+  .log {
+    padding: 18px;
+    /* dvh, not vh. On a phone the on-screen keyboard shrinks the viewport and
+       vh does not follow, so the log collapsed to a sliver the moment someone
+       tapped the input — at exactly the point they were about to ask. dvh
+       tracks the visible area; the vh line stays as a fallback for browsers
+       that do not know it. */
+    max-height: 52vh;
+    max-height: 46dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .msg { margin-bottom: 18px }
+  .msg .who {
+    font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--faint); margin-bottom: 6px;
+  }
+  .msg.you .who { color: var(--cyan) }
+  .msg p { margin: 0 0 8px }
+
+  /* Evidence is not a footnote. A claim without its level, or a quotation
+     without its lines, is the thing this whole system exists to avoid, so the
+     provenance is rendered at the same weight as the sentence it supports. */
+  .src {
+    margin-top: 10px; padding: 10px 12px;
+    background: #0b111a; border: 1px solid var(--line);
+    border-left: 2px solid var(--violet);
+    border-radius: 8px; font-size: 13px; color: var(--dim);
+  }
+  .src .lvl {
+    display: inline-block; padding: 1px 7px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; letter-spacing: .03em;
+    margin-right: 8px;
+  }
+  .lvl.l1 { background: rgba(52,211,153,.14); color: var(--green) }
+  .lvl.l2 { background: rgba(251,191,36,.14); color: var(--amber) }
+  .lvl.q  { background: rgba(167,139,250,.16); color: var(--violet) }
+  .src a { color: var(--cyan); text-decoration: none }
+  .src a:hover { text-decoration: underline }
+  /* A class rather than an inline style: a strict Content-Security-Policy with
+     style-src 'self' drops inline attributes silently, and this line would
+     have rendered unstyled on a site enforcing one while looking correct in a
+     local file. The radar shipped that exact defect a week ago. */
+  .src .how { color: var(--faint) }
+
+  .unknown { border-left-color: var(--rose) }
+  .unknown .lvl { background: rgba(251,113,133,.14); color: var(--rose) }
+
+  .ask-row { display: flex; gap: 10px; padding: 14px 18px; border-top: 1px solid var(--line) }
+  .ask-row input {
+    flex: 1; background: #0b111a; border: 1px solid var(--line);
+    border-radius: 10px; padding: 11px 13px; color: var(--ink); font: inherit;
+  }
+  .ask-row input:focus { outline: none; border-color: #2b3a4d }
+  .ask-row button {
+    background: var(--cyan); color: #041018; border: 0; border-radius: 10px;
+    padding: 0 18px; font: inherit; font-weight: 600; cursor: pointer;
+  }
+  .ask-row button:disabled { opacity: .45; cursor: default }
+
+  .foot { padding: 10px 18px 14px; color: var(--faint); font-size: 12px }
+  .foot a { color: var(--faint) }
+
+  .seed { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 18px 14px }
+  .seed button {
+    background: #0b111a; border: 1px solid var(--line); border-radius: 20px;
+    color: var(--dim); font: inherit; font-size: 12.5px; padding: 6px 12px;
+    cursor: pointer;
+  }
+  .seed button:hover { border-color: #2b3a4d; color: var(--ink) }
+</style>
+
+<button class="ask" id="open" aria-expanded="false" aria-controls="panel">
+  <span class="kicker">The whole project, answered</span>
+  <span class="go" aria-hidden="true">→</span>
+  <span class="t">Ask anything about AxonOS</span>
+  <p>Every answer comes with its source: a proof, a measurement with its
+     evidence level, or a quotation with the lines it came from. Questions it
+     cannot answer from those get "I do not know" instead of a guess.</p>
+  <div class="meta">
+    <span><i class="dot g"></i> 43 machine-checked proofs</span>
+    <span><i class="dot c"></i> every figure linked to its artefact</span>
+    <span><i class="dot a"></i> 8 published retractions</span>
+  </div>
+</button>
+
+<section class="panel" id="panel">
+  <div class="head">
+    <b>ask-axonos</b>
+    <button class="x" id="close" aria-label="Close">×</button>
+  </div>
+
+  <div class="log" id="log" aria-live="polite" aria-atomic="false">
+    <div class="msg">
+      <div class="who">AXON</div>
+      <p>I am an AI representative of The AxonOS Project, not a person.</p>
+      <p>I answer from a registry of statements this project is permitted to
+         make, each carrying the level at which it is evidenced, and from the
+         published specifications, which I quote rather than summarise. If your
+         question falls outside both, I will say so and pass it to Denis.</p>
+    </div>
+  </div>
+
+  <div class="seed" id="seed">
+    <button>How is any of this verified?</button>
+    <button>What have you gotten wrong?</button>
+    <button>What accuracy does the decoder get?</button>
+    <button>How does the privacy boundary work?</button>
+  </div>
+
+  <div class="ask-row">
+    <input id="q" placeholder="Ask something specific" autocomplete="off">
+    <button id="send">Ask</button>
+  </div>
+
+  <div class="foot">
+    Answers are checkable by design. Nothing here is a clinical claim.
+    <a href="https://github.com/AxonOS-org">The code is public.</a>
+  </div>
+</section>
+
+<script>
+// Preview only. The three replies below are hand-written to show what each
+// kind of answer looks like — a registry claim with its level, a quotation
+// with its lines, and a refusal. Wiring this to the real backend replaces
+// reply() and nothing else.
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const log = $("log"), panel = $("panel"), open = $("open");
+
+  const esc = (s) => String(s).replace(/[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  const SAMPLES = [
+    {
+      match: /verif|proof|proven|rigor/i,
+      text: "Forty-three bounded-model-checking proofs: thirty in the kernel, seven in the signal pipeline, six in the consent crate. You can run them yourself.",
+      src: { lvl: "L1", cls: "l1", note: "machine-checked in CI",
+             link: "https://github.com/AxonOS-org/axonos-kernel",
+             how: "cargo kani, in each kani-proofs directory" }
+    },
+    {
+      match: /wrong|retract|mistake/i,
+      text: "Eight retractions are published. Two examples: a seven-stage timing table was presented as measured when it was invented, and a utilisation ceiling of 0.80 appeared in code while the specification publishes 0.25. Both were withdrawn in axonos-hal 0.2.0.",
+      src: { lvl: "RETRACTED", cls: "q", note: "D1 and D2, recorded in the conformance table",
+             link: "https://github.com/AxonOS-org/axonos-rfcs",
+             how: "the failure text is kept; a table that erases its own failures evidences nothing" }
+    },
+    {
+      match: /accuracy|itr|bitrate|how fast/i,
+      unknown: true,
+      text: "This project does not measure classification accuracy, and I will not estimate one. What it does measure is timing: the worst-case response is proven at or below 1000 microseconds and observed at 972 on reference hardware, with the raw traces not yet published.",
+      src: { lvl: "NOT CLAIMED", cls: "q", note: "accuracy is on the explicit non-claims list",
+             link: "https://github.com/AxonOS-org/axonos-validation",
+             how: "the traces directory is empty, and says so" }
+    }
+  ];
+
+  const FALLBACK = {
+    unknown: true,
+    text: "I do not know that, and I will not guess. I will pass it to Denis at connect@axonos.org.",
+    src: { lvl: "NO SOURCE", cls: "q", note: "outside the registry and the corpus",
+           link: "mailto:connect@axonos.org", how: "a gap reported is useful; a gap filled is a defect" }
+  };
+
+  function add(who, body) {
+    const d = document.createElement("div");
+    d.className = "msg" + (who === "YOU" ? " you" : "");
+    d.innerHTML = '<div class="who">' + esc(who) + "</div>" + body;
+    log.appendChild(d);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function reply(q) {
+    const hit = SAMPLES.find((s) => s.match.test(q)) || FALLBACK;
+    const s = hit.src;
+    add("AXON",
+      "<p>" + esc(hit.text) + "</p>" +
+      '<div class="src' + (hit.unknown ? " unknown" : "") + '">' +
+        '<span class="lvl ' + s.cls + '">' + esc(s.lvl) + "</span>" +
+        esc(s.note) +
+        '<br><a href="' + esc(s.link) + '">' + esc(s.link) + "</a>" +
+        '<br><span class="how">' + esc(s.how) + "</span>" +
+      "</div>");
+  }
+
+  function ask(q) {
+    q = String(q || "").trim();
+    if (!q) return;
+    add("YOU", "<p>" + esc(q) + "</p>");
+    $("q").value = "";
+    setTimeout(() => reply(q), 220);
+  }
+
+  open.addEventListener("click", () => {
+    const isOpen = panel.hasAttribute("data-open");
+    if (isOpen) { panel.removeAttribute("data-open"); }
+    else { panel.setAttribute("data-open", ""); $("q").focus(); }
+    open.setAttribute("aria-expanded", String(!isOpen));
+  });
+  $("close").addEventListener("click", () => {
+    panel.removeAttribute("data-open");
+    open.setAttribute("aria-expanded", "false");
+    open.focus();
+  });
+  // Escape closes and returns focus to the button. Without it the only way
+  // out of an open panel is a mouse, which is a poor answer on a phone and no
+  // answer at all for a keyboard user.
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && panel.hasAttribute("data-open")) {
+      panel.removeAttribute("data-open");
+      open.setAttribute("aria-expanded", "false");
+      open.focus();
+    }
+  });
+  $("send").addEventListener("click", () => ask($("q").value));
+  $("q").addEventListener("keydown", (e) => { if (e.key === "Enter") ask($("q").value); });
+  $("seed").addEventListener("click", (e) => {
+    if (e.target.tagName === "BUTTON") ask(e.target.textContent);
+  });
+})();
+</script>
