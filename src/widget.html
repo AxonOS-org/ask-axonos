@@ -216,6 +216,15 @@
     padding: 0 18px; font: inherit; font-weight: 600; cursor: pointer;
   }
   .ask-row button:disabled { opacity: .45; cursor: default }
+  /* Speech is offered, never imposed. It appears only where the browser can
+     do it, stays off until asked, and the panel says whose voice it is before
+     it says anything else. */
+  .ask-row .speak {
+    background: transparent; color: var(--dim);
+    border: 1px solid var(--line); font-weight: 500;
+  }
+  .ask-row .speak[aria-pressed="true"] { color: var(--cyan); border-color: #2b3a4d }
+  .voice-note { color: var(--faint); font-size: 13px }
 
   .foot { padding: 10px 18px 14px; color: var(--faint); font-size: 12px }
   .foot a { color: var(--faint) }
@@ -252,11 +261,15 @@
   <div class="log" id="log" aria-live="polite" aria-atomic="false">
     <div class="msg">
       <div class="who">AXON</div>
-      <p>I am an AI representative of The AxonOS Project, not a person.</p>
+      <p><b>I am the digital assistant of The AxonOS Project.</b> Not a person,
+         and I will say so again if you ask.</p>
       <p>I answer from a registry of statements this project is permitted to
          make, each carrying the level at which it is evidenced, and from the
          published specifications, which I quote rather than summarise. If your
          question falls outside both, I will say so and pass it to Denis.</p>
+      <p class="voice-note" id="voice-note" hidden>The voice you are hearing is
+         synthesised from Denis's own. He is not on the line; anything needing
+         his decision goes to him in writing.</p>
     </div>
   </div>
 
@@ -269,6 +282,8 @@
 
   <div class="ask-row">
     <input id="q" placeholder="Ask something specific" autocomplete="off">
+    <button class="speak" id="speak" hidden aria-pressed="false"
+            title="Read answers aloud">Listen</button>
     <button id="send">Ask</button>
   </div>
 
@@ -342,6 +357,7 @@
         '<br><a href="' + esc(s.link) + '">' + esc(s.link) + "</a>" +
         '<br><span class="how">' + esc(s.how) + "</span>" +
       "</div>");
+    say(hit.text);
   }
 
   function ask(q) {
@@ -373,6 +389,37 @@
       open.focus();
     }
   });
+  // Speech, and the two rules it must not break.
+  //
+  // It says whose voice it is before it speaks. A synthesised voice built from
+  // a person's own, used without saying so, is the failure this whole project
+  // argues against: an agent that conceals what it is refutes a product about
+  // trusting agents.
+  //
+  // And it never becomes the only path. Everything spoken is on screen, so a
+  // reader who cannot listen loses nothing.
+  const speak = $("speak");
+  const canSpeak = "speechSynthesis" in window;
+  let speaking = false;
+  if (canSpeak) speak.hidden = false;
+
+  speak.addEventListener("click", () => {
+    speaking = !speaking;
+    speak.setAttribute("aria-pressed", String(speaking));
+    speak.textContent = speaking ? "Listening on" : "Listen";
+    $("voice-note").hidden = !speaking;
+    if (!speaking) window.speechSynthesis.cancel();
+  });
+
+  function say(text) {
+    if (!speaking || !canSpeak) return;
+    // The source block is not read aloud: a URL spoken character by character
+    // is noise, and the link is on screen where it belongs.
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 1.0; u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+  }
+
   $("send").addEventListener("click", () => ask($("q").value));
   $("q").addEventListener("keydown", (e) => { if (e.key === "Enter") ask($("q").value); });
   $("seed").addEventListener("click", (e) => {

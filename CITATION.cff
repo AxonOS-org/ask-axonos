@@ -15,7 +15,7 @@ abstract: >-
   A question widget for The AxonOS Project. Every answer carries its source: a
   claim with the level at which it is evidenced, a quotation with the lines it
   came from, or a refusal with the reason.
-version: 0.1.0
+version: 0.2.0
 date-released: "2026-08-11"
 license: "Apache-2.0 OR MIT"
 keywords:

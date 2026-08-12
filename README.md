@@ -4,7 +4,7 @@
 
 ### An answer, and where it came from.
 
-[![Version](https://img.shields.io/badge/version-0.1.0-2dd4ff?style=flat-square&labelColor=0e141d)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.2.0-2dd4ff?style=flat-square&labelColor=0e141d)](CHANGELOG.md)
 [![Dependencies](https://img.shields.io/badge/dependencies-0-34d399?style=flat-square&labelColor=0e141d)](src/widget.html)
 [![Discloses](https://img.shields.io/badge/discloses%20itself-first%20line-a78bfa?style=flat-square&labelColor=0e141d)](#it-says-what-it-is-before-being-asked)
 [![License](https://img.shields.io/badge/Apache--2.0%20OR%20MIT-6b7789?style=flat-square&labelColor=0e141d)](#licence)
@@ -76,6 +76,18 @@ The knowledge system itself, the registry and its validators and the retrieval
 with provenance per passage, lives in a private repository because it holds the
 working analysis this project is steered by. What it produces is public: every
 claim it may make traces to an artefact anyone can open.
+
+## The contract between widget and backend
+
+`contract/answer_contract.py` defines what an answer may be and refuses one that
+is not. It is here rather than in the private repository because it is the
+guarantee a visitor is being offered, and a guarantee nobody can read is a
+promise.
+
+It rejects rather than repairs. A malformed answer could be patched — strip the
+figure, drop the citation, serve what is left — and that would produce something
+plausible from something broken, which is this system's failure mode expressed
+in one function.
 
 ## Licence
 
