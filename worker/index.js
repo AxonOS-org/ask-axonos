@@ -34,6 +34,10 @@
  * key that cannot leak from a repository is the one that was never in it.
  */
 
+import PROMPT from "./AGENT_PROMPT.md";
+import CLAIMS from "./claims.json";
+import CORPUS from "./corpus-index.json";
+
 const MODEL = "claude-sonnet-4-6";
 const MAX_QUESTION = 400;
 
@@ -55,32 +59,22 @@ const CORS = {
  * than not answering.
  */
 async function loadKnowledge(env) {
-  const headers = {
-    Authorization: `Bearer ${env.GITHUB_READ_TOKEN}`,
-    Accept: "application/vnd.github.raw",
-    "User-Agent": "ask-axonos-worker",
-  };
-  const base = "https://api.github.com/repos/AxonOS-org/axonos-agent/contents";
-
-  const [promptRes, indexRes, claimsRes] = await Promise.all([
-    fetch(`${base}/knowledge/AGENT_PROMPT.md`, { headers }),
-    fetch(`${base}/knowledge/.corpus-cache/index.json`, { headers }),
-    fetch(`${base}/knowledge/claims.json`, { headers }),
-  ]);
-
-  if (!promptRes.ok || !claimsRes.ok) {
-    throw new Error(
-      `knowledge unavailable (prompt ${promptRes.status}, claims ${claimsRes.status})`
-    );
-  }
-
+  // Bundled at deploy time, not fetched at request time.
+  //
+  // The first version pulled the prompt and the registry from a private
+  // repository with a read token. That worked and it bought nothing: the
+  // registry is a list of what this project is permitted to assert, with the
+  // check for each, and it is stronger published than hidden — a list nobody
+  // can fake is worthless if nobody can read it.
+  //
+  // Publishing it removes a whole class of problem rather than solving one. No
+  // token in the cloud, no repository to be unreachable, no cache to go stale,
+  // and no request-time fetch on the critical path of every answer. What stays
+  // private is what genuinely is: the strategy and the correspondence.
   return {
-    prompt: await promptRes.text(),
-    claims: JSON.parse(await claimsRes.text()),
-    // The corpus index is optional: without it the agent answers from the
-    // registry alone, which is narrower and still correct. Without the
-    // registry it cannot answer at all, and says so.
-    passages: indexRes.ok ? JSON.parse(await indexRes.text()).passages || [] : [],
+    prompt: PROMPT,
+    claims: CLAIMS.claims,
+    passages: CORPUS.passages || [],
   };
 }
 

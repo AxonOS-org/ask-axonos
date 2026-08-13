@@ -1,0 +1,183 @@
+{
+  "author": "Denis Yermakou <connect@axonos.org>",
+  "copyright": "Copyright (c) 2026 Denis Yermakou — The AxonOS Project",
+  "license": "Apache-2.0 OR MIT",
+  "project": "https://axonos.org",
+  "registry_version": 1,
+  "generated": "2026-08-06",
+  "rule": "The agent may state a claim only if it appears here. Anything absent is answered with 'I do not know, I will ask Denis' — never filled in. Every claim carries the level at which it is evidenced and the artefact where a listener can check it.",
+  "levels": {
+    "L1": "formally proven or arithmetically derived; machine-checked in CI",
+    "L2": "measured on reference hardware; raw traces not yet published",
+    "L3": "independently reproduced — claimed for nothing",
+    "policy": "a chosen limit, not a measurement",
+    "live": "read from a published payload that refreshes"
+  },
+  "claims": [
+    {
+      "id": "proofs",
+      "text": "43 bounded-model-checking proofs: 30 kernel, 7 signal pipeline, 6 consent",
+      "level": "L1",
+      "source": "https://github.com/AxonOS-org/axonos-kernel",
+      "verify": "cargo kani in each kani-proofs directory"
+    },
+    {
+      "id": "unsafe",
+      "text": "forbid(unsafe_code) everywhere except two audited kernel operations",
+      "level": "L1",
+      "source": "https://github.com/AxonOS-org/axonos-kernel",
+      "verify": "grep the crate attributes"
+    },
+    {
+      "id": "nostd",
+      "text": "no_std verified against a bare-metal target in CI, not asserted",
+      "level": "L1",
+      "source": "https://github.com/AxonOS-org/axonos-brs/blob/main/.github/workflows/ci.yml",
+      "verify": "the no_std job builds for thumbv7em-none-eabihf"
+    },
+    {
+      "id": "langs",
+      "text": "one wire format decoded byte-identically in five languages",
+      "level": "L1",
+      "source": "https://github.com/AxonOS-org/axonos-conformance",
+      "verify": "python3 validator.py"
+    },
+    {
+      "id": "wasm",
+      "text": "the scoring rule produces identical bytes natively and in WebAssembly",
+      "level": "L1",
+      "source": "https://github.com/AxonOS-org/axonos-brs",
+      "verify": "the cross_target_identical CI job diffs both outputs"
+    },
+    {
+      "id": "align",
+      "text": "alignment reduces inter-subject difference to a residual rotation and provably cannot remove it",
+      "level": "L1",
+      "source": "https://github.com/AxonOS-org/axonos-signal-pipeline/blob/main/docs/CALIBRATION.md",
+      "verify": "the algebra is three lines; numeric check to 1e-7"
+    },
+    {
+      "id": "wcrt_proven",
+      "text": "end-to-end worst-case response proven at or below 1000 microseconds",
+      "level": "L1",
+      "source": "https://github.com/AxonOS-org/axonos-kernel",
+      "verify": "axonos-scheduler BMC harnesses"
+    },
+    {
+      "id": "wcrt_observed",
+      "text": "972 microseconds worst observed over 12 hours and 10.8 million epochs on STM32F407, zero deadline misses",
+      "level": "L2",
+      "source": "RFC-0001",
+      "verify": "raw traces not published; axonos-validation/traces is empty and says so"
+    },
+    {
+      "id": "tasks",
+      "text": "the admitted task set sums to 694.2 microseconds",
+      "level": "L2",
+      "source": "RFC-0001",
+      "verify": "four tasks, each published separately"
+    },
+    {
+      "id": "residual",
+      "text": "277.8 microseconds of blocking and interference, 28.6 per cent of the budget",
+      "level": "L2",
+      "source": "https://github.com/AxonOS-org/axonos-rfcs/blob/main/rfcs/0008-deadline-closure-acquisition-chain.md",
+      "verify": "972 minus 694.2, less jitter"
+    },
+    {
+      "id": "ceiling",
+      "text": "utilisation ceiling of 0.25; the admitted set runs at 0.174 and 500 SPS is refused at 0.347",
+      "level": "policy",
+      "source": "RFC-0001",
+      "verify": "axonos-hal refuses the configuration"
+    },
+    {
+      "id": "opoint",
+      "text": "a change of operating point re-closes the timing budget before the device may arrive there",
+      "level": "L1",
+      "source": "https://github.com/AxonOS-org/axonos-hal",
+      "verify": "AdmittedPoint::transition_to; RFC-0008 N4 conformant as of 0.3.0"
+    },
+    {
+      "id": "gate96",
+      "text": "in the reference session an electrode lifts at 4.828 s and the right to actuate is withdrawn 96 ms later, while recording continues",
+      "level": "L1",
+      "source": "https://github.com/AxonOS-org/axonos-stack",
+      "verify": "cargo run --locked --bin session -- --seed 7 --frames 3000 | diff - reference/session-7.txt"
+    },
+    {
+      "id": "bound",
+      "text": "an application learns at most the granted number of bits about a sealed window",
+      "level": "L1",
+      "source": "https://github.com/AxonOS-org/axonos-rfcs/blob/main/rfcs/0009-bounded-disclosure-sealed-neural-data.md",
+      "verify": "Theorem 1; the enforcing arithmetic is pinned by conformance vectors"
+    },
+    {
+      "id": "map",
+      "text": "about 120 scored projects on the live map, about 3200 repositories scanned per run, 31 near misses below the gate",
+      "level": "live",
+      "source": "https://github.com/AxonOS-BCI/axonos-community-radar/blob/main/data/radar.json",
+      "verify": "the payload refreshes every three hours"
+    }
+  ],
+  "not_claimed": [
+    "classification accuracy of any kind",
+    "information transfer rate",
+    "power draw",
+    "on-hardware end-to-end latency in a deployment",
+    "session length in real use",
+    "electrode count in a real deployment",
+    "L3 independent reproduction — claimed for nothing",
+    "any clinical claim; this is a pre-clinical engineering artifact"
+  ],
+  "retracted": [
+    {
+      "what": "a seven-stage WCET table presented as measured",
+      "when": "axonos-hal 0.2.0",
+      "why": "it was invented; RFC-0001 publishes four tasks",
+      "id": "D1"
+    },
+    {
+      "what": "a utilisation ceiling of 0.80",
+      "when": "axonos-hal 0.2.0",
+      "why": "invented; the published ceiling is 0.25, and 500 SPS is refused because of it",
+      "id": "D2"
+    },
+    {
+      "what": "ZeroCalib described as giving usable accuracy in seconds",
+      "when": "radar 13.1.1",
+      "why": "the crate's own documentation declines any accuracy or transfer claim, four times",
+      "id": "ZC"
+    },
+    {
+      "what": "a 3200-bit grant that the audit log could cap at 2048",
+      "when": "axonos-vault 0.2.0",
+      "why": "the advertised ceiling was not the binding one and no reader could tell",
+      "id": "N5"
+    },
+    {
+      "what": "an uncharged liveness channel",
+      "when": "axonos-vault 0.2.0",
+      "why": "a refusal that depended on the data could be polled for free",
+      "id": "U2"
+    },
+    {
+      "what": "target quarters that had passed",
+      "when": "axonos-rfcs, 2026-08",
+      "why": "five RFCs carried Q2 2026 a month into Q3; replaced by the condition that gates the work",
+      "id": "Q2"
+    },
+    {
+      "what": "a dual-licence declaration with no licence texts",
+      "when": "five crates, 2026-08",
+      "why": "Apache-2.0 section 4(d) cannot be honoured against a NOTICE that does not exist",
+      "id": "LIC"
+    },
+    {
+      "what": "six weeks of unsigned automated commits under a signed-history claim",
+      "when": "radar 13.5.1",
+      "why": "a user token cannot produce a signed commit; the writer is now an identity GitHub signs for",
+      "id": "SIG"
+    }
+  ]
+}

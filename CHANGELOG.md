@@ -1,5 +1,72 @@
 # Changelog
 
+## [0.5.0] — 2026-08-13
+
+### Added
+- **`site/ask.html`** — the page, not just the widget. Open Graph tags, because
+  the link gets pasted where a card renders and a card with a truncated title
+  reads as an afterthought. The widget's styles are included rather than
+  copied, so a fix is a fix in both.
+- **`DEPLOY.md`** — the browser path. `wrangler` is a Node tool with native
+  dependencies and installing it on Termux is a gamble that costs an evening;
+  the Cloudflare dashboard does the same thing from a phone. It ends with three
+  questions to ask the live agent, and the middle one must be refused: if it
+  produces an accuracy figure, the contract has failed.
+- **`knowledge/`** — the registry, its validators, the prompt generated from
+  it, and retrieval with provenance per passage.
+
+### Changed
+- **The registry and prompt are public and bundled into the Worker.** They were
+  private and fetched with a read token at request time. That worked and bought
+  nothing: a registry is a list of what this project is permitted to assert,
+  with the check for each, and it is stronger published than hidden — a claim
+  nobody can fake is worth nothing if nobody can read it.
+
+  Publishing removed three things rather than solving one: a token living in
+  the cloud, a fetch on the critical path of every answer, and a cache that
+  could go stale. `ANTHROPIC_API_KEY` is now the only secret.
+
+- **Attribution reaches every file.** Six carried none: the changelog, two
+  copies of the registry, the Worker configuration, the page, and the registry
+  self-test. JSON takes no comments, so the registries carry `author`,
+  `copyright` and `license` as fields, ordered first so they are read before
+  the content they cover. The page carries a visible footer as well as a
+  comment — a licence a reader cannot see is a licence a reader will not check.
+
+### Notes
+The attribution audit produced one false positive worth recording. It reported
+`CITATION.cff` as unattributed while the file names the author correctly in
+separate `family-names` and `given-names` fields, which is what the format
+requires. The check was looking for one string in a file that stores two, and
+the file was right.
+
+## [0.4.0] — 2026-08-11
+
+### Changed
+- **The registry, the prompt and the corpus index are public.** They were in a
+  private repository and the Worker fetched them with a read token at request
+  time. That worked and bought nothing.
+
+  A registry is a list of what this project is permitted to assert, with the
+  check for each. It is stronger published than hidden: a claim nobody can fake
+  is worth nothing if nobody can read it. Publishing it removed a token living
+  in the cloud, a fetch on the critical path of every answer, and a cache that
+  could go stale — three problems deleted rather than solved.
+
+  What stays private is what genuinely is: the strategy and the correspondence.
+
+### Added
+- `site/ask.html` — the page, not just the widget. Open Graph tags because the
+  link will be pasted where a card renders, and a card with a truncated title
+  reads as an afterthought. The widget's own styles are included rather than
+  copied, so a fix is a fix in both.
+- `DEPLOY.md` — the browser path. `wrangler` is a Node tool with native
+  dependencies and installing it on Termux is a gamble that costs an evening;
+  the Cloudflare dashboard does the same thing from a phone.
+- A three-question check at the end of the deploy notes. The middle one asks
+  for an accuracy figure and must be refused; if it produces a number, the
+  contract has failed and something upstream is wrong.
+
 ## [0.3.0] — 2026-08-11
 
 ### Added
@@ -112,3 +179,7 @@ already the shapes the knowledge system produces.
 No inline styles. A strict `Content-Security-Policy` with `style-src 'self'`
 drops them silently, which would leave an answer unstyled on the live site
 while looking correct locally. The radar shipped that exact defect a week ago.
+
+---
+
+<sub>SPDX-License-Identifier: Apache-2.0 OR MIT · Copyright (c) 2026 Denis Yermakou <connect@axonos.org> — The AxonOS Project · https://axonos.org</sub>

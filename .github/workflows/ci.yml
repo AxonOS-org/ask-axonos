@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Contracts, filters, and the copies that must not drift
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+
+      - name: The answer contract holds
+        run: python3 contract/answer_contract.py --selftest
+
+      - name: The gap filters hold
+        run: python3 contract/gaps.py --selftest
+
+      - name: The registry is well formed
+        working-directory: knowledge
+        run: python3 build_agent.py && python3 selftest.py
+
+      - name: The generated prompt is current
+        working-directory: knowledge
+        # A generated file drifts when someone edits the output instead of the
+        # input. Regenerating and diffing catches it, and the failure names the
+        # file rather than surfacing later as an answer nobody can explain.
+        run: |
+          git diff --exit-code AGENT_PROMPT.md \
+            || { echo "::error::AGENT_PROMPT.md was edited by hand; edit claims.json and regenerate"; exit 1; }
+
+      - name: The worker's copy of the knowledge has not drifted
+        # The worker bundles the prompt and the registry because a Worker cannot
+        # read a sibling directory at deploy time. That is a copy, and a copy is
+        # a thing that will eventually differ — so it is compared here rather
+        # than trusted.
+        run: |
+          for f in AGENT_PROMPT.md claims.json; do
+            diff -q "knowledge/$f" "worker/$f" \
+              || { echo "::error::worker/$f differs from knowledge/$f; the deployed agent would answer from a different registry than the one published"; exit 1; }
+          done
+          echo "  both copies identical"
+
+      - name: The widget still keeps its promises
+        run: |
+          python3 - <<'PY'
+          import re, sys, pathlib
+          def die(m): print(f"::error::{m}"); sys.exit(1)
+          for path in ("src/widget.html", "site/ask.html"):
+              w = pathlib.Path(path).read_text(encoding="utf-8")
+              if re.findall(r'<[a-z]+[^>]*\sstyle="', w):
+                  die(f"{path}: an inline style is back; a strict CSP drops it silently")
+              if "digital assistant" not in w: die(f"{path}: the disclosure line is gone")
+              if "dvh" not in w: die(f"{path}: back on vh; the keyboard collapses the panel")
+              if "Escape" not in w: die(f"{path}: Escape no longer closes the panel")
+              for tag in ("button", "section", "div", "p"):
+                  if len(re.findall(rf"<{tag}[ >]", w)) != len(re.findall(rf"</{tag}>", w)):
+                      die(f"{path}: unbalanced <{tag}>")
+          print("  widget and page both intact")
+          PY
+
+      - name: No key has been committed
+        run: |
+          if grep -rIE "sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}" . \
+               --exclude-dir=.git --exclude-dir=.github >/dev/null 2>&1; then
+            echo "::error::something shaped like a key is in the tree. Secrets go to the Cloudflare store, never here"
+            exit 1
+          fi
+          echo "  no key-shaped strings"

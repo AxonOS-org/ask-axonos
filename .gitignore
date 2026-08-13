@@ -1,6 +1,3 @@
 *.log
 node_modules/
 .DS_Store
-__pycache__/
-gaps.json
-.dev.vars
