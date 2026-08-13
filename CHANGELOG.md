@@ -1,5 +1,47 @@
 # Changelog
 
+## [0.3.0] — 2026-08-11
+
+### Added
+- **`contract/gaps.py` — the questions this agent could not answer, published.**
+
+  Every project has a list of things it cannot explain about itself. Most keep
+  it private, discover it late, and hear it from someone who has already
+  decided not to engage. This one publishes it, and the list is written by
+  whoever asked.
+
+  Three things it has to get right, and two are not obvious.
+
+  **Not every refusal is a gap.** "What accuracy does the decoder get" is
+  refused because accuracy is on the explicit non-claims list, a position the
+  project holds. Publishing it as something unknown converts a stance into a
+  hole. Refusals are sorted by why, and only one kind reaches the page.
+
+  **Questions are about people sometimes.** "My father has ALS, would this help
+  him" is fair and unpublishable, anonymised or not. The filter is deliberately
+  over-broad: losing a real gap costs a line on a page, publishing somebody's
+  circumstances costs more.
+
+  **A public list of holes is a target.** An entry appears after two different
+  people ask. A gap somebody cares about will be asked twice; one invented by a
+  script will not be.
+
+- The Worker records refusals with a hashed asker id and a ninety-day expiry.
+  What may be stored is decided by `gaps.py`, so contact details and anything
+  that might be about a person never reach storage.
+
+### Fixed while building it
+- The stopword list contained `work`, so "how does consent work" collapsed to a
+  single term and was dropped as too vague. A list copied from general English
+  discarded the verb this domain runs on: how something works is most of what
+  anyone asks.
+- Grouping used exact set equality, so two phrasings of one question became two
+  entries — which is how a list of gaps turns into a list of phrasings. It is
+  Jaccard similarity at 0.5 now: coarse, inspectable, and it keeps "consent
+  work" apart from "scheduler work" at 0.33 while merging the phrasings.
+- Vagueness was measured on the normaliser's output, which judged a question by
+  how much the grouping threw away. It is measured on the question.
+
 ## [0.2.0] — 2026-08-11
 
 ### Added

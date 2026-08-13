@@ -4,7 +4,7 @@
 
 ### An answer, and where it came from.
 
-[![Version](https://img.shields.io/badge/version-0.2.0-2dd4ff?style=flat-square&labelColor=0e141d)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.3.0-2dd4ff?style=flat-square&labelColor=0e141d)](CHANGELOG.md)
 [![Dependencies](https://img.shields.io/badge/dependencies-0-34d399?style=flat-square&labelColor=0e141d)](src/widget.html)
 [![Discloses](https://img.shields.io/badge/discloses%20itself-first%20line-a78bfa?style=flat-square&labelColor=0e141d)](#it-says-what-it-is-before-being-asked)
 [![License](https://img.shields.io/badge/Apache--2.0%20OR%20MIT-6b7789?style=flat-square&labelColor=0e141d)](#licence)
@@ -76,6 +76,27 @@ The knowledge system itself, the registry and its validators and the retrieval
 with provenance per passage, lives in a private repository because it holds the
 working analysis this project is steered by. What it produces is public: every
 claim it may make traces to an artefact anyone can open.
+
+## What I could not answer
+
+The agent refuses questions outside the registry and the corpus. Those refusals
+are published: [`docs/GAPS.md`](docs/GAPS.md) is a list of what this project
+cannot explain about itself, written by whoever asked.
+
+Most projects have that list and keep it private, discover it late, and hear it
+from someone who has already decided not to engage. It is more useful open: a
+gap is a fact about this project's documentation, and it is the shortest
+description of what to write next.
+
+A question appears after two different people ask it. One person asking is a
+question; two is a gap. Anything that might be about a person, or that carries
+contact details, is never published and never stored — the filter is over-broad
+on purpose.
+
+And a refusal that is a *position* does not appear there. The agent declines to
+state a classification accuracy because accuracy is on the non-claims list.
+That is something the project will not say, not something it does not know, and
+putting it on that page would turn one into the other.
 
 ## The contract between widget and backend
 

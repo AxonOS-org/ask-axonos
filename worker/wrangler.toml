@@ -1,0 +1,27 @@
+name = "ask-axonos"
+main = "index.js"
+compatibility_date = "2026-08-01"
+
+# Secrets are NOT here. They live in Cloudflare's store:
+#
+#   wrangler secret put ANTHROPIC_API_KEY
+#   wrangler secret put GITHUB_READ_TOKEN
+#
+# A private repository is a commercial boundary, not a vault. A key committed
+# to one has still been committed: repositories are cloned, shared with
+# contractors, restored from backups and made public by a mis-click. The only
+# key that cannot leak from a repository is the one that was never in it.
+#
+# GITHUB_READ_TOKEN needs contents:read on AxonOS-org/axonos-agent and nothing
+# else. It reads the prompt, the registry and the corpus index; it can write
+# nowhere.
+
+[vars]
+# Non-secret configuration only. Anything here is visible in the dashboard.
+ENVIRONMENT = "production"
+
+# Rate limiting state. Optional: without it the worker still answers, it simply
+# stops counting, which the code handles rather than assuming.
+# [[kv_namespaces]]
+# binding = "ASK_KV"
+# id = "<create with: wrangler kv namespace create ASK_KV>"

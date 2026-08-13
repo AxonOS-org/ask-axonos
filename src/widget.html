@@ -294,17 +294,10 @@
 </section>
 
 <script>
-// Preview only. The three replies below are hand-written to show what each
-// kind of answer looks like — a registry claim with its level, a quotation
-// with its lines, and a refusal. Wiring this to the real backend replaces
-// reply() and nothing else.
-(function () {
-  "use strict";
-  const $ = (id) => document.getElementById(id);
-  const log = $("log"), panel = $("panel"), open = $("open");
-
-  const esc = (s) => String(s).replace(/[&<>"']/g,
-    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+// The engine lives behind a Worker. Set ENDPOINT and this stops being a
+// preview: the samples below are the fallback for a page served without one,
+// so the widget is never blank and never pretends to have answered.
+const ENDPOINT = ""; // e.g. "https://ask-axonos.<subdomain>.workers.dev"
 
   const SAMPLES = [
     {
@@ -360,12 +353,64 @@
     say(hit.text);
   }
 
-  function ask(q) {
+  function render(a) {
+    // One renderer for both paths. The shape the Worker returns and the shape
+    // the samples use are the same shape on purpose: a preview that renders
+    // differently from production is a preview that proves nothing.
+    const lvl = a.kind === "refusal" ? "NO SOURCE"
+              : a.kind === "quotation" ? "QUOTED"
+              : (a.source && a.source.level) || "CLAIM";
+    const cls = a.kind === "refusal" ? "q"
+              : lvl === "L1" ? "l1" : lvl === "L2" ? "l2" : "q";
+    const link = a.kind === "quotation" ? (a.source && a.source.url)
+               : a.kind === "claim" ? (a.source && a.source.artefact)
+               : "mailto:connect@axonos.org";
+    const note = a.kind === "refusal" ? (a.reason || "outside the registry and the corpus")
+               : a.kind === "quotation"
+                 ? (a.source.document + ", lines " + a.source.lines.join("-"))
+                 : ((a.source && a.source.verify) || "check it yourself");
+
+    add("AXON",
+      "<p>" + esc(a.text) + "</p>" +
+      (a.caveat ? '<p class="how">' + esc(a.caveat) + "</p>" : "") +
+      '<div class="src' + (a.kind === "refusal" ? " unknown" : "") + '">' +
+        '<span class="lvl ' + cls + '">' + esc(lvl) + "</span>" + esc(note) +
+        (link ? '<br><a href="' + esc(link) + '">' + esc(link) + "</a>" : "") +
+      "</div>");
+    say(a.text);
+  }
+
+  async function ask(q) {
     q = String(q || "").trim();
     if (!q) return;
     add("YOU", "<p>" + esc(q) + "</p>");
     $("q").value = "";
-    setTimeout(() => reply(q), 220);
+    $("send").disabled = true;
+
+    if (!ENDPOINT) {
+      // No engine configured: fall back to the samples rather than showing an
+      // error a visitor cannot act on.
+      setTimeout(() => { reply(q); $("send").disabled = false; }, 220);
+      return;
+    }
+    try {
+      const res = await fetch(ENDPOINT, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ question: q }),
+      });
+      render(await res.json());
+    } catch (e) {
+      // A network failure is a refusal, not silence, and it carries no figure
+      // so it satisfies the same contract as every other answer.
+      render({
+        kind: "refusal",
+        text: "I could not reach the engine just now, and I will not improvise. Denis reads connect@axonos.org.",
+        reason: "network",
+      });
+    } finally {
+      $("send").disabled = false;
+    }
   }
 
   open.addEventListener("click", () => {
