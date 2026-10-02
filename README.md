@@ -8,6 +8,7 @@
 [![Dependencies](https://img.shields.io/badge/dependencies-0-34d399?style=flat-square&labelColor=0e141d)](src/widget.html)
 [![Discloses](https://img.shields.io/badge/discloses%20itself-first%20line-a78bfa?style=flat-square&labelColor=0e141d)](#it-says-what-it-is-before-being-asked)
 [![License](https://img.shields.io/badge/Apache--2.0%20OR%20MIT-6b7789?style=flat-square&labelColor=0e141d)](#licence)
+[![AxonOS Radar](https://img.shields.io/badge/AxonOS%20Radar-open%20neurotech%20map-1f8fae?style=flat-square&labelColor=0b1220)](https://axonos-bci.github.io/axonos-community-radar/)
 
 **[→ Open the preview](https://github.com/AxonOS-org/ask-axonos/blob/main/src/widget.html)** · one file, no build step
 
